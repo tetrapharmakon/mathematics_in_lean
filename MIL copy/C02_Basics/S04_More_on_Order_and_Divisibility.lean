@@ -39,18 +39,113 @@ example : min a b = min b a := by
     apply min_le_left
 
 example : max a b = max b a := by
-  sorry
+  apply le_antisymm
+  · show max a b ≤ max b a
+    apply max_le
+    · apply le_max_right
+    · apply le_max_left
+  · show max b a ≤ max a b
+    apply max_le
+    · apply le_max_right
+    · apply le_max_left
+
+example : max a b = max b a := by
+  apply le_antisymm
+  -- `repeat`: you figure it out using the list of tactics below
+  repeat
+    apply max_le
+    apply le_max_right
+    apply le_max_left
+
 example : min (min a b) c = min a (min b c) := by
-  sorry
+  apply le_antisymm
+  -- claim true iff lhs ≤ rhs and lhs ≥ rhs
+  · show min (min a b) c ≤ min a (min b c)
+  -- claim true iff [lhs ≤ a] ∧ [lhs ≤ min b c]
+    -- to prove [lhs ≤ a],
+    · repeat
+        apply le_min
+        apply le_trans
+        apply min_le_left
+      apply min_le_left
+    -- to prove [lhs ≤ min b c]
+      · repeat
+          apply le_min
+          apply le_trans
+          apply min_le_left
+          apply min_le_right
+        apply min_le_right
+  · show min a (min b c) ≤ min (min a b) c
+    · apply le_min
+      · repeat
+          apply le_min
+          apply min_le_left
+          apply le_trans
+          apply min_le_right
+        apply min_le_left
+      · repeat
+          apply le_trans
+          apply min_le_right
+          apply min_le_right
+
+-- ^ refactored from
+example : min (min a b) c = min a (min b c) := by
+  apply le_antisymm
+  -- claim true iff lhs ≤ rhs and lhs ≥ rhs
+  · show min (min a b) c ≤ min a (min b c)
+  -- claim true iff [lhs ≤ a] ∧ [lhs ≤ min b c]
+    -- to prove [lhs ≤ a],
+    · apply le_min
+      · apply le_trans
+        · apply min_le_left
+        · apply min_le_left
+    -- to prove [lhs ≤ min b c]
+      · apply le_min
+        · apply le_trans
+          apply min_le_left
+          apply min_le_right
+        · apply min_le_right
+  · show min a (min b c) ≤ min (min a b) c
+    · apply le_min
+      · apply le_min
+        apply min_le_left
+        apply le_trans
+        apply min_le_right
+        apply min_le_left
+      · apply le_trans
+        apply min_le_right
+        apply min_le_right
+
 theorem aux : min a b + c ≤ min (a + c) (b + c) := by
-  sorry
+  apply le_min
+  · apply add_le_add
+    apply min_le_left
+    apply le_refl
+  · apply add_le_add
+    apply min_le_right
+    apply le_refl
+
+theorem coaux : min (a + c) (b + c) ≤  min a b + c := by
+  apply sub_le_iff_le_add.mp
+  apply le_min
+  · apply sub_le_iff_le_add.mpr
+    apply min_le_left
+  · apply sub_le_iff_le_add.mpr
+    apply min_le_right
+
 example : min a b + c = min (a + c) (b + c) := by
-  sorry
+  apply le_antisymm
+  · apply aux
+  · apply coaux
+
 #check (abs_add : ∀ a b : ℝ, |a + b| ≤ |a| + |b|)
 
-example : |a| - |b| ≤ |a - b| :=
+
+theorem halp : a - b + b = a := by
+  rw [sub_eq_add_neg,add_assoc,neg_add_cancel,add_zero]
+
+example : |a| - |b| ≤ |a - b| := by
   sorry
-end
 
 section
 variable (w x y z : ℕ)
@@ -58,15 +153,20 @@ variable (w x y z : ℕ)
 example (h₀ : x ∣ y) (h₁ : y ∣ z) : x ∣ z :=
   dvd_trans h₀ h₁
 
-example : x ∣ y * x * z := by
+theorem self_dvd_mul : x ∣ y * x * z := by
   apply dvd_mul_of_dvd_left
   apply dvd_mul_left
 
-example : x ∣ x ^ 2 := by
+theorem dvd_pow_self : x ∣ x ^ 2 := by
   apply dvd_mul_left
 
 example (h : x ∣ w) : x ∣ y * (x * z) + x ^ 2 + w ^ 2 := by
-  sorry
+  apply dvd_add
+  apply dvd_add
+  rw [← mul_assoc]
+  · apply self_dvd_mul
+  · apply dvd_pow_self
+  · apply dvd_mul_of_dvd_right h
 end
 
 section
@@ -80,5 +180,3 @@ variable (m n : ℕ)
 example : Nat.gcd m n = Nat.gcd n m := by
   sorry
 end
-
-

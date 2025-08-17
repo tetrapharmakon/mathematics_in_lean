@@ -114,25 +114,33 @@ example (h : a ≤ b) : c - exp b ≤ c - exp a := by
   apply sub_le_sub_left
   exact exp_le_exp.mpr h
 
-theorem cip : 2*a*b ≤ a^2 + b^2 := by
-  have h : 0 ≤ a^2 - 2*a*b + b^2
+theorem cip : a*b*2 ≤ a^2 + b^2 := by
+  have h : 0 ≤ a^2 - a*b*2 + b^2
   calc
-    a^2 - 2*a*b + b^2 = (a - b)^2 := by ring
+    a^2 - a*b*2 + b^2 = (a - b)^2 := by ring
     _ ≥ 0 := by apply pow_two_nonneg
 
   calc
-    2*a*b = 2*a*b + 0 := by ring
-    _ ≤ 2*a*b + (a^2 - 2*a*b + b^2) := add_le_add (le_refl _) h
+    a*b*2 = a*b*2 + 0 := by ring
+    _ ≤ a*b*2 + (a^2 - a*b*2 + b^2) := add_le_add (le_refl _) h
     _ = a^2 + b^2 := by ring
 
-theorem ciop : 2*a*b ≤ a^2 + b^2 := by
-  have h : 0 ≤ a^2 - 2*a*b + b^2
+theorem ciop : -(a*b)*2 ≤ a^2 + b^2 := by
+  have h : 0 ≤ a^2 + a*b*2 + b^2
   calc
-    a^2 - 2*a*b + b^2 = (a - b)^2 := by ring
+    a^2 + a*b*2 + b^2 = (a + b)^2 := by ring
     _ ≥ 0 := by apply pow_two_nonneg
   linarith
 
 example : |a*b| ≤ (a^2 + b^2)/2 := by
-  sorry
+  have h : (0 : ℝ) < 2 := by norm_num
+  apply abs_le'.mpr
+  constructor
+  -- when the goal is p ∧ q or p ∨ q, `constructor` splits the goal
+  -- the tack · separates the two subgoals neatly
+  · rw [le_div_iff₀ h]
+    apply cip
+  · rw [le_div_iff₀ h]
+    apply ciop
 
 #check abs_le'.mpr
