@@ -98,14 +98,22 @@ variable (a b c : R)
 
 #check (mul_nonneg : 0 ≤ a → 0 ≤ b → 0 ≤ a * b)
 
-example (h : a ≤ b) : 0 ≤ b - a := by
-  sorry
+theorem zero_le_sub_mpr (h : a ≤ b) : 0 ≤ b - a := by
+  apply le_sub_iff_add_le.mpr
+  rw [zero_add a]
+  apply h
 
-example (h: 0 ≤ b - a) : a ≤ b := by
-  sorry
+theorem zero_le_sub_mp (h : 0 ≤ b - a) : a ≤ b := by
+  rw [← zero_add a]
+  apply le_sub_iff_add_le.mp
+  apply h
 
 example (h : a ≤ b) (h' : 0 ≤ c) : a * c ≤ b * c := by
-  sorry
+  apply zero_le_sub_mp
+  rw [← sub_mul]
+  refine Right.mul_nonneg ?_ h'
+  apply zero_le_sub_mpr
+  apply h
 
 end
 
@@ -118,7 +126,10 @@ variable (x y z : X)
 #check (dist_triangle x y z : dist x z ≤ dist x y + dist y z)
 
 example (x y : X) : 0 ≤ dist x y := by
-  sorry
-
+  have : 0 ≤ dist x y + dist y x := by
+    rw [← dist_self x]
+    apply dist_triangle
+  rw [dist_comm y x] at this
+  linarith
 
 end
