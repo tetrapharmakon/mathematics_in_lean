@@ -25,18 +25,26 @@ def FnHasLb (f : ℝ → ℝ) :=
 
 variable (f : ℝ → ℝ)
 
-example (h : ∀ a, ∃ x, f x > a) : ¬FnHasUb f := by
+theorem noLB_crit (h : ∀ a, ∃ x, f x > a) : ¬FnHasUb f := by
   intro fnub
   rcases fnub with ⟨a, fnuba⟩
   rcases h a with ⟨x, hx⟩
   have : f x ≤ a := fnuba x
   linarith
 
-example (h : ∀ a, ∃ x, f x < a) : ¬FnHasLb f :=
-  sorry
+example (h : ∀ a, ∃ x, f x < a) : ¬FnHasLb f := by
+  intro fnlb
+  rcases fnlb with ⟨a , fnlba⟩
+  rcases h a with ⟨x , hx⟩
+  have : f x ≥ a := fnlba x
+  linarith -- linarith konws how to combine [hx : f x < a] and [this : f x ≥ a] to get False
 
-example : ¬FnHasUb fun x ↦ x :=
-  sorry
+
+example : ¬FnHasUb fun x ↦ x := by
+  rintro ⟨a , ha⟩
+  have : a + 1 ≤ a := ha (a + 1)
+  linarith
+
 
 #check (not_le_of_gt : a > b → ¬a ≤ b)
 #check (not_lt_of_ge : a ≥ b → ¬a < b)
@@ -136,4 +144,3 @@ example (h : 0 < 0) : a > 37 := by
   contradiction
 
 end
-
