@@ -52,51 +52,67 @@ example : ¬FnHasUb fun x ↦ x := by
 #check (le_of_not_gt : ¬a > b → a ≤ b)
 
 example (h : Monotone f) (h' : f a < f b) : a < b := by
-  sorry
+  apply lt_of_not_ge
+  intro b_le_a
+  have : f b ≤ f a := by apply h b_le_a
+  linarith
+
 
 example (h : a ≤ b) (h' : f b < f a) : ¬Monotone f := by
-  sorry
+  intro mon_f
+  have : f a ≤ f b := by apply mon_f h
+  linarith -- linarith konws how to combine [foo < bar] and [foo ≥ bar] to imply bottom
 
 example : ¬∀ {f : ℝ → ℝ}, Monotone f → ∀ {a b}, f a ≤ f b → a ≤ b := by
   intro h
   let f := fun x : ℝ ↦ (0 : ℝ)
-  have monof : Monotone f := by sorry
+  have monof : Monotone f := by
+    intro u v u_le_v
+    apply le_refl
   have h' : f 1 ≤ f 0 := le_refl _
-  sorry
+  have : (1 : ℝ) ≤ 0 := h monof h'
+  linarith
 
 example (x : ℝ) (h : ∀ ε > 0, x < ε) : x ≤ 0 := by
-  sorry
+  apply le_of_not_gt
+  intro z_le_x
+  have : x < x := by apply h x z_le_x
+  linarith
 
 end
 
 section
 variable {α : Type*} (P : α → Prop) (Q : Prop)
 
-example (h : ¬∃ x, P x) : ∀ x, ¬P x := by
-  sorry
+theorem all_not_of_not_ex (h : ¬∃ x, P x) : ∀ x, ¬P x := by
+  intro x px
+  apply h
+  exact ⟨x , px⟩
 
-example (h : ∀ x, ¬P x) : ¬∃ x, P x := by
-  sorry
+theorem not_ex_of_all_not (h : ∀ x, ¬P x) : ¬∃ x, P x := by
+  intro ⟨x , px⟩
+  exact h x px
 
-example (h : ¬∀ x, P x) : ∃ x, ¬P x := by
-  sorry
-
-example (h : ∃ x, ¬P x) : ¬∀ x, P x := by
-  sorry
-
-example (h : ¬∀ x, P x) : ∃ x, ¬P x := by
+theorem ex_not_of_not_all (h : ¬∀ x, P x) : ∃ x, ¬P x := by
   by_contra h'
   apply h
   intro x
-  show P x
   by_contra h''
-  exact h' ⟨x, h''⟩
+  exact h' ⟨x , h''⟩
 
-example (h : ¬¬Q) : Q := by
-  sorry
+theorem not_all_of_ex_not (h : ∃ x, ¬P x) : ¬∀ x, P x := by
+  intro sgno
+  rcases h with ⟨x , not_px⟩
+  apply not_px
+  exact sgno x
 
-example (h : Q) : ¬¬Q := by
-  sorry
+theorem of_notnot (h : ¬¬Q) : Q := by
+  by_contra h'
+  exact h h'
+
+theorem notnot_of (h : Q) : ¬¬Q := by
+  by_contra h'
+  exact h' h
 
 end
 
@@ -104,7 +120,14 @@ section
 variable (f : ℝ → ℝ)
 
 example (h : ¬FnHasUb f) : ∀ a, ∃ x, f x > a := by
-  sorry
+  intro a
+  by_contra h'
+  push_neg at h'
+  -- would be nice to use `dsimp` to simplify FnHasUb f into ∃ a, FnUb f a
+  -- it's the line below
+  exact h ⟨a , h'⟩
+
+
 
 example (h : ¬∀ a, ∃ x, f x > a) : FnHasUb f := by
   push_neg at h
@@ -116,7 +139,9 @@ example (h : ¬FnHasUb f) : ∀ a, ∃ x, f x > a := by
   exact h
 
 example (h : ¬Monotone f) : ∃ x y, x ≤ y ∧ f y < f x := by
-  sorry
+  dsimp only [Monotone] at h
+  push_neg at h
+  exact h
 
 example (h : ¬FnHasUb f) : ∀ a, ∃ x, f x > a := by
   contrapose! h
@@ -141,6 +166,6 @@ example (h : 0 < 0) : a > 37 :=
 
 example (h : 0 < 0) : a > 37 := by
   have h' : ¬0 < 0 := lt_irrefl 0
-  contradiction
+  contradiction --explosion principle
 
 end
